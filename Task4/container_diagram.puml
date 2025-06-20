@@ -1,0 +1,53 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров - Передача ставок в кол-центр
+
+Person(back_office_credit, "Сотрудник бэк-офиса", "Менеджер кредитов")
+Person(back_office_deposit, "Сотрудник бэк-офиса", "Менеджер депозитов")
+Person(call_center_operator, "Оператор кол-центра", "Внутренний кол-центр")
+Person(client, "Клиент", "Физическое лицо")
+Person(front_office, "Сотрудник фронт-офиса", "Менеджер отделения")
+Person(partner_call_center_operator, "Оператор партнёрского кол-центра", "Внешний партнёр")
+Person(partner_call_center_manager, "Менеджер партнёрского кол-центра", "Внешний партнёр")
+
+System_Boundary(bank_systems, "IT-системы банка") {
+    Container(abs_client, "АБС клиент", "Delphi", "Учёт операций, бухгалтерия")
+    Container(abs_db, "АБС БД", "Oracle, PL-SQL", "Учёт операций, бухгалтерия")
+    Container(call_center_system, "Система кол-центра", "React.js, Java Spring Boot, PostgreSQL", "CRM, обработка звонков")
+    Container(partner_call_system_gateway, "Шлюз партнерского колцентра", "Java Spring Boot, PostgreSQL")
+    Container(rate_service, "Сервис ставок", ".NET Core", "Централизованное управление депозитными ставками")
+    Container(rate_service_db, "БД сервиса ставок", "MS SQL")
+}
+
+System_Ext(partner_call_system, "Система партнёрского кол-центра", "Внешняя система")
+
+Rel(abs_client, abs_db, "")
+Rel(abs_client, rate_service, "Работа со ставками")
+
+Rel(back_office_credit, abs_client, "Анализирует кредитные риски, определяет ставки")
+
+Rel(back_office_deposit, abs_client, "Обрабатывает депозитные заявки, запрашивает согласование ставок")
+
+Rel(call_center_operator, call_center_system, "Принимает звонки, оформляет заявки, узнаёт ставки")
+
+Rel(call_center_system, abs_db, "Передача обращений пользователя, заведение заявок")
+Rel(call_center_system, rate_service, "Взять данные про актуальные ставки")
+
+Rel(client, call_center_system, "Звонит для консультации")
+Rel(client, partner_call_system, "Звонит для консультации")
+
+Rel(front_office, abs_client, "Оформляет заявки")
+
+Rel(partner_call_center_manager, partner_call_center_operator, "Передаёт файл с актуальными ставками")
+
+Rel(partner_call_center_operator, partner_call_system, "Принимает звонки, оформляет заявки")
+
+Rel(partner_call_system, partner_call_system_gateway, "Передача обращений пользователя, заведение заявок")
+
+Rel(partner_call_system_gateway, abs_db, "Передача обращений пользователя, заведение заявок")
+Rel(partner_call_system_gateway, partner_call_center_manager, "Отправка письма с файлом про актуальные ставки")
+
+Rel(rate_service, rate_service_db, "")
+
+@enduml

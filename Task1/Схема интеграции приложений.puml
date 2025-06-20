@@ -1,0 +1,46 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Схема интеграции приложений банка "Стандарт"
+
+Person(client, "Клиент", "Физическое лицо")
+Person(front_office, "Сотрудник фронт-офиса", "Менеджер отделения")
+Person(back_office_deposit, "Сотрудник бэк-офиса", "Менеджер депозитов")
+Person(back_office_credit, "Сотрудник бэк-офиса", "Менеджер кредитов")
+Person(call_center_operator, "Оператор кол-центра", "Внутренний кол-центр")
+Person(partner_call_center, "Оператор партнёрского кол-центра", "Внешний партнёр")
+
+System_Boundary(bank_systems, "IT-системы банка") {
+    Container(website, "Сайт", "PHP, React.js", "Маркетинговая информация")
+    Container(internet_bank, "Интернет-банк", "ASP.NET MVC 4.5, MS SQL", "Платежи, открытие текущих счетов")
+    Container(abs, "АБС", "Delphi, Oracle, PL-SQL", "Учёт операций, бухгалтерия")
+    Container(call_center_system, "Система кол-центра", "React.js, Java Spring Boot, PostgreSQL", "CRM, обработка звонков")
+    Container(sms_gateway, "СМС-шлюз", "Интеграция с телеком", "Отправка СМС")
+}
+
+System_Ext(partner_call_system, "Система партнёрского кол-центра", "Внешняя система")
+System_Ext(telecom, "Телеком-оператор", "Внешний оператор СМС")
+
+Rel(client, website, "Просматривает информацию")
+Rel(client, internet_bank, "Проводит платежи, открывает счета")
+Rel(client, front_office, "Посещает отделение")
+Rel(client, call_center_system, "Звонит для консультации")
+Rel(client, partner_call_system, "Звонит для консультации")
+
+Rel(front_office, abs, "Создает заявки при офлайн-посещении клиента")
+Rel(back_office_deposit, abs, "Обрабатывает депозитные заявки")
+Rel(back_office_credit, abs, "Анализирует кредитные риски")
+Rel(call_center_operator, call_center_system, "Принимает звонки")
+Rel(partner_call_center, partner_call_system, "Принимает звонки")
+
+Rel(internet_bank, abs, "Проведение платежей, открытие счетов")
+Rel(call_center_system, abs, "Передача обращений")
+Rel(partner_call_center, abs, "Передача обращений")
+Rel(abs, sms_gateway, "Отправка уведомлений")
+Rel(sms_gateway, telecom, "Отправка СМС")
+Rel(telecom, client, "СМС-уведомления")
+
+Rel(back_office_deposit, back_office_credit, "Email переписка", "Согласование ставок")
+Rel(front_office, back_office_deposit, "Email запросы", "Определение ставок")
+
+@enduml
