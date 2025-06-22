@@ -1,0 +1,85 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров - MVP Онлайн депозиты
+
+Person(back_office_credit, "Сотрудник бэк-офиса", "Менеджер кредитов")
+Person(back_office_deposit, "Сотрудник бэк-офиса", "Менеджер депозитов")
+Person(call_center_operator, "Оператор кол-центра", "Внутренний кол-центр")
+Person(client, "Клиент", "Физическое лицо")
+Person(front_office, "Сотрудник фронт-офиса", "Менеджер отделения")
+Person(partner_call_center_operator, "Оператор партнёрского кол-центра", "Внешний партнёр")
+
+System_Boundary(bank_systems, "IT-системы банка") {
+    Container(abs_client, "АБС клиент", "Delphi", "Учёт операций, бухгалтерия")
+    Container(abs_db, "АБС БД", "Oracle, PL-SQL", "Учёт операций, бухгалтерия")
+    Container(deposit_service, "Депозитный сервис", "Java Spring Boot", "Обработка заявок на депозиты, интеграция с кол-центром")
+    Container(deposit_service_db, "БД депозитного сервиса", "PostgreSQL")
+    Container(call_center_system, "Система кол-центра", "React.js, Java Spring Boot, PostgreSQL", "CRM, обработка звонков")
+    Container(internet_bank_backend, "Бекенд интернет-банка", "ASP.NET MVC 4.5, MS SQL", "Платежи, открытие текущих счетов")
+    Container(internet_bank_frontend, "Фронтенд интернет-банка", "ASP.NET MVC 4.5")
+    Container(kafka, "Kafka", "Apache Kafka", "Очереди для асинхронных операций")
+    Container(partner_call_system_gateway, "Шлюз партнерского колцентра", "Java Spring Boot, PostgreSQL")
+    Container(rate_service, "Сервис ставок", ".NET Core", "Централизованное управление депозитными ставками")
+    Container(rate_service_db, "БД сервиса ставок", "MS SQL")
+    Container(sms_gateway, "СМС-шлюз", "Интеграция с телеком", "Отправка СМС")
+    Container(website_backend, "Бекенд сайта", "PHP", "Маркетинговая информация, подача заявок на открытие счетов")
+    Container(website_frontend, "Фронтенд сайта", "React.js")
+}
+
+System_Ext(partner_call_system, "Система партнёрского кол-центра", "Внешняя система")
+System_Ext(telecom, "Телеком-оператор", "Внешний оператор СМС")
+
+Rel(abs_client, abs_db, "")
+Rel(abs_client, deposit_service, "Работа со депозитами")
+Rel(abs_client, rate_service, "Работа со ставками")
+
+Rel(abs_db, sms_gateway, "Отправка уведомлений")
+
+Rel(back_office_credit, abs_client, "Анализирует кредитные риски, определяет ставки")
+
+Rel(back_office_deposit, abs_client, "Обрабатывает депозитные заявки, запрашивает согласование ставок")
+
+Rel(call_center_operator, call_center_system, "Принимает звонки, оформляет заявки")
+
+Rel(call_center_system, abs_db, "Передача обращений пользователя, заведение заявок")
+
+Rel(client, call_center_system, "Звонит для консультации")
+Rel(client, internet_bank_frontend, "Проводит платежи, открывает счета")
+Rel(client, partner_call_system, "Звонит для консультации")
+Rel(client, website_frontend, "Просматривает информацию, отправляет заявку на открытие депозита")
+
+Rel(deposit_service, deposit_service_db, "")
+Rel(deposit_service, abs_db, "Передача данных о депозитах")
+
+Rel(front_office, abs_client, "Оформляет заявки")
+
+Rel(internet_bank_backend, abs_db, "Проведение платежей")
+Rel(internet_bank_backend, deposit_service, "Получение информации об открытых депозитных счетах")
+Rel(internet_bank_backend, kafka, "Открытие депозитных счетов")
+Rel(internet_bank_backend, rate_service, "Получение информации о ставках")
+
+Rel(internet_bank_frontend, internet_bank_backend, "")
+
+Rel(kafka, deposit_service, "Открытие депозитных счетов")
+
+Rel(partner_call_center_operator, partner_call_system, "Принимает звонки, оформляет заявки")
+
+Rel(partner_call_system, partner_call_system_gateway, "Передача обращений пользователя, заведение заявок")
+
+Rel(partner_call_system_gateway, abs_db, "Передача обращений пользователя, заведение заявок")
+
+Rel(rate_service, rate_service_db, "")
+
+Rel(sms_gateway, telecom, "Отправка СМС")
+
+Rel(telecom, client, "СМС-уведомления")
+
+Rel(website_backend, deposit_service, "Получение информации об открытых депозитных счетах")
+Rel(website_backend, kafka, "Открытие депозитных счетов")
+Rel(website_backend, rate_service, "Получение информации о ставках")
+
+Rel(website_frontend, website_backend, "")
+
+
+@enduml
